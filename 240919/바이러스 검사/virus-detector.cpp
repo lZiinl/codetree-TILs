@@ -34,7 +34,10 @@ void solve() {
 
 		if (now > 0) {
 			res = res + now / ser;
-			res += 1;
+
+			if (now % ser != 0) {
+				res += 1;
+			}
 		}
 
 		result += res;
