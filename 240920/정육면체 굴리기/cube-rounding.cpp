@@ -131,7 +131,7 @@ int main() {
 	cin.tie(0);
 	cout.tie(0);
 
-	freopen("sample.txt", "r", stdin);
+	//freopen("sample.txt", "r", stdin);
 
 	input();
 	solve();
