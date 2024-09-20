@@ -1,18 +1,19 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include<iostream>
+#include <iostream>
+#include <vector>
 
 using namespace std;
 
-int N, M, K;
-int sp_x, sp_y;
+int N, M, X, Y, K;
 int map[21][21];
 int cmd[1001];
-int dy[4] = { 1, 0, 0, -1 };
-int dx[4] = { 0, 1, -1, 0 };
 int dice[4][4];
+int dy[5] = { 0, 0, 0, -1, 1 };
+int dx[5] = { 0, 1, -1, 0, 0 };
 
 void input() {
-	cin >> N >> M >> sp_y >> sp_x >> K;
+
+	cin >> N >> M >> Y >> X >> K;
 
 	for (int i = 0; i < N; i++) {
 		for (int j = 0; j < M; j++) {
@@ -27,47 +28,18 @@ void input() {
 
 void solve() {
 
-	int y = sp_y;
-	int x = sp_x;
-
 	for (int i = 0; i < K; i++) {
-		int dir = (cmd[i] % 4);
 
-		int ny = y + dy[dir];
-		int nx = x + dx[dir];
+		int nx = X + dx[cmd[i]];
+		int ny = Y + dy[cmd[i]];
 
-		//벽이면 가만히 있음
-		if (nx < 0 || nx >= M || ny < 0 || ny >= N) {
-			continue;
-		}
+		if (nx < 0 || ny < 0 || nx >= M || ny >= N) continue;
 
 		int temp = 0;
 
-		//남쪽으로 움직이면
-		if (dir == 0) {
-			if (map[ny][nx] == 0) {
-				map[ny][nx] = dice[2][1];
-				temp = dice[0][1];
-				dice[0][1] = dice[1][1];
-				dice[1][1] = map[ny][nx];
-				dice[2][1] = dice[3][1];
-				dice[3][1] = temp;
-				dice[1][3] = dice[3][1];
-			}
-			else {
-				temp = dice[0][1];
-				dice[0][1] = dice[1][1];
-				dice[1][1] = map[ny][nx];
-				map[ny][nx] = 0;
-				dice[2][1] = dice[3][1];
-				dice[3][1] = temp;
-				dice[1][3] = dice[3][1];
-			}
-		}
+		if (map[ny][nx] == 0) {
 
-		//동쪽
-		if (dir == 1) {
-			if (map[ny][nx] == 0) {
+			if (cmd[i] == 1) {
 				map[ny][nx] = dice[1][2];
 				temp = dice[1][0];
 				dice[1][0] = dice[1][1];
@@ -76,20 +48,7 @@ void solve() {
 				dice[1][3] = temp;
 				dice[3][1] = dice[1][3];
 			}
-			else {
-				temp = dice[1][0];
-				dice[1][0] = dice[1][1];
-				dice[1][1] = map[ny][nx];
-				map[ny][nx] = 0;
-				dice[1][2] = dice[1][3];
-				dice[1][3] = temp;
-				dice[3][1] = dice[1][3];
-			}
-		}
-
-		//서쪽
-		if (dir == 2) {
-			if (map[ny][nx] == 0) {
+			else if (cmd[i] == 2) {
 				map[ny][nx] = dice[1][0];
 				temp = dice[1][3];
 				dice[1][3] = dice[1][2];
@@ -98,20 +57,7 @@ void solve() {
 				dice[1][0] = temp;
 				dice[3][1] = dice[1][3];
 			}
-			else {
-				temp = dice[1][3];
-				dice[1][3] = dice[1][2];
-				dice[1][2] = dice[1][1];
-				dice[1][1] = map[ny][nx];
-				map[ny][nx] = 0;
-				dice[1][0] = temp;
-				dice[3][1] = dice[1][3];
-			}
-		}
-
-		//북쪽
-		if (dir == 3) {
-			if (map[ny][nx] == 0) {
+			else if (cmd[i] == 3) {
 				map[ny][nx] = dice[0][1];
 				temp = dice[3][1];
 				dice[3][1] = dice[2][1];
@@ -120,7 +66,38 @@ void solve() {
 				dice[0][1] = temp;
 				dice[1][3] = dice[3][1];
 			}
-			else {
+			else if (cmd[i] == 4) {
+				map[ny][nx] = dice[2][1];
+				temp = dice[0][1];
+				dice[0][1] = dice[1][1];
+				dice[1][1] = map[ny][nx];
+				dice[2][1] = dice[3][1];
+				dice[3][1] = temp;
+				dice[1][3] = dice[3][1];
+			}
+
+		}
+		else {
+
+			if (cmd[i] == 1) {
+				temp = dice[1][0];
+				dice[1][0] = dice[1][1];
+				dice[1][1] = map[ny][nx];
+				map[ny][nx] = 0;
+				dice[1][2] = dice[1][3];
+				dice[1][3] = temp;
+				dice[3][1] = dice[1][3];
+			}
+			else if (cmd[i] == 2) {
+				temp = dice[1][3];
+				dice[1][3] = dice[1][2];
+				dice[1][2] = dice[1][1];
+				dice[1][1] = map[ny][nx];
+				map[ny][nx] = 0;
+				dice[1][0] = temp;
+				dice[3][1] = dice[1][3];
+			}
+			else if (cmd[i] == 3) {
 				temp = dice[3][1];
 				dice[3][1] = dice[2][1];
 				dice[2][1] = dice[1][1];
@@ -129,20 +106,34 @@ void solve() {
 				dice[0][1] = temp;
 				dice[1][3] = dice[3][1];
 			}
-			
+			else if (cmd[i] == 4) {
+				temp = dice[0][1];
+				dice[0][1] = dice[1][1];
+				dice[1][1] = map[ny][nx];
+				map[ny][nx] = 0;
+				dice[2][1] = dice[3][1];
+				dice[3][1] = temp;
+				dice[1][3] = dice[3][1];
+			}
+
 		}
 
-		x = nx;
-		y = ny;
+		X = nx;
+		Y = ny;
+
 		cout << dice[3][1] << "\n";
 	}
 }
 
 int main() {
-	//freopen("sample.txt", "r", stdin);
+
+	ios::sync_with_stdio(false);
+	cin.tie(0);
+	cout.tie(0);
+
+	freopen("sample.txt", "r", stdin);
 
 	input();
-
 	solve();
 
 	return 0;
