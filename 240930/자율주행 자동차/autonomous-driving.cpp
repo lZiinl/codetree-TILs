@@ -13,8 +13,6 @@ int vis[51][51];
 int dx[4] = { 0, 1, 0, -1 };
 int dy[4] = { -1, 0, 1, 0 };
 
-int cnt = 1;
-
 struct Node{
 	int y, x;
 };
@@ -60,7 +58,6 @@ void move() {
 			q.push({ ny,nx });
 			map[ny][nx] = 2;
 			flag = 1;
-			cnt++;
 			break;
 		}
 
@@ -69,7 +66,7 @@ void move() {
 		nx = now.x - dx[D];
 		ny = now.y - dy[D];
 
-		if (nx < 0 || ny < 0 || nx >= M || ny >= N) return;
+		if (map[ny][nx] == 1) return;
 
 		q.push({ ny,nx });
 	}
@@ -77,6 +74,14 @@ void move() {
 }
 
 void cal() {
+	int cnt = 0;
+
+	for (int i = 0; i < N; i++){
+		for (int j = 0; j < M; j++){
+			if (map[i][j] == 2) cnt++;
+		}
+	}
+
 	cout << cnt;
 }
 
