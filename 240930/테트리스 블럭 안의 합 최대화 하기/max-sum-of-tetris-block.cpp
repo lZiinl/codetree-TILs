@@ -59,6 +59,26 @@ void solve() {
 			vis[i][j] = 1;
 			dfs(1, i, j, map[i][j]);
 			vis[i][j] = 0;
+
+			for (int k = 0; k < 4; k++){
+
+				int sum = map[i][j];
+
+				for (int l = 0; l < 3; l++){
+
+					int ny = i + dy[(k + l) % 4];
+					int nx = j + dx[(k + l) % 4];
+
+					if (nx < 0 || ny < 0 || nx >= M || ny >= N) break;
+
+					sum += map[ny][nx];
+				}
+
+				if (sum > mmax) {
+					mmax = sum;
+				}
+
+			}
 		}
 	}
 
