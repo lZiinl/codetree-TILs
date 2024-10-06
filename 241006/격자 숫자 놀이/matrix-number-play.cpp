@@ -72,7 +72,7 @@ void find() {
 				vector<pair<int, int>>tv;
 				memset(number_cnt, 0, sizeof(number_cnt));
 
-				for (int j = 1; j <= hang; j++) number_cnt[map[i][j]]++;
+				for (int j = 1; j <= hang; j++) number_cnt[map[j][i]]++;
 				for (int j = 1; j < 101; j++) {
 					if (number_cnt[j] == 0) continue;
 					tv.push_back(make_pair( number_cnt[j], j));
@@ -80,7 +80,7 @@ void find() {
 
 				sort(tv.begin(), tv.end());
 
-				for (int j = 1; j <= hang; j++) map[i][j] = 0;
+				for (int j = 1; j <= hang; j++) map[j][i] = 0;
 				int index = 1;
 
 				for (int j = 0; j < tv.size(); j++) {
