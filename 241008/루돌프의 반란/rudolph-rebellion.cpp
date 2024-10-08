@@ -17,7 +17,7 @@ struct Santa
 
 vector<Santa> S;
 
-int map[101][101];
+int map[110][110];
 bool isdie[31];
 int score[31];
 
@@ -37,6 +37,10 @@ bool cmp(Santa a, Santa b) {
 
 }
 
+bool cmp2(Santa a, Santa b) {
+	return a.num < b.num;
+}
+
 void input() {
 
 	cin >> N >> M >> P >> C >> D;
@@ -50,6 +54,8 @@ void input() {
 		S.push_back({t1, t2, t3 });
 		map[t2][t3] = t1;
 	}
+
+	sort(S.begin(), S.end(), cmp2);
 }
 
 void inter(int y, int x, int dir) {
@@ -68,7 +74,11 @@ void inter(int y, int x, int dir) {
 	if (map[S[n].y][S[n].x] != 0) {
 		inter(S[n].y, S[n].x, dir);
 	}
-	map[S[n].y][S[n].x] = n;
+
+	if (S[n].y > 0 && S[n].x > 0) {
+		map[S[n].y][S[n].x] = n;
+	}
+
 }
 
 void crash1(int n, int dir) {
@@ -85,7 +95,10 @@ void crash1(int n, int dir) {
 	if (map[S[n].y][S[n].x] != 0) {
 		inter( S[n].y, S[n].x, dir);
 	}
-	map[S[n].y][S[n].x] = n;
+	
+	if (S[n].y > 0 && S[n].x > 0) {
+		map[S[n].y][S[n].x] = n;
+	}
 }
 
 void crash2(int n, int dir) {
@@ -101,7 +114,10 @@ void crash2(int n, int dir) {
 	if (map[S[n].y][S[n].x] != 0) {
 		inter(S[n].y, S[n].x, dir);
 	}
-	map[S[n].y][S[n].x] = n;
+
+	if (S[n].y > 0 && S[n].x > 0) {
+		map[S[n].y][S[n].x] = n;
+	}
 }
 
 void roodolf() {
@@ -165,7 +181,7 @@ void moves() {
 		if (S[i].t > gametime) continue;
 
 		int min_dist = (S[i].y - ru_y) * (S[i].y - ru_y) + (S[i].x - ru_x) * (S[i].x - ru_x);
-		int dir;
+		int dir = 10;
 
 		for (int j = 0; j < 4; j++){
 			int nx = S[i].x + dx[j];
@@ -181,15 +197,20 @@ void moves() {
 			}
 		}
 
-		map[S[i].y][S[i].x] = 0;
-		S[i].x += dx[dir];
-		S[i].y += dy[dir];
+		if (dir != 10) {
+			map[S[i].y][S[i].x] = 0;
+			S[i].x += dx[dir];
+			S[i].y += dy[dir];
+		}
 
 		if (S[i].x == ru_x && S[i].y == ru_y) {
 			score[i] += D;
 			crash2(i, (dir + 2) % 4);
 		}
-		map[S[i].y][S[i].x] = i;
+
+		if (S[i].y > 0 && S[i].x > 0) {
+			map[S[i].y][S[i].x] = i;
+		}
 	}
 }
 
