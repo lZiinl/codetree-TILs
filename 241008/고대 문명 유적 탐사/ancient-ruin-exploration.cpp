@@ -138,8 +138,14 @@ void bfs1(int r) {
 		}
 	}
 
-	if (sum >= mmax) {
+	if (sum > mmax) {
+			r_time = r;
+			mmax = sum;
+			resultmap();
+	}
+	else if (sum == mmax) {
 		if (r < r_time) {
+			r_time = r;
 			mmax = sum;
 			resultmap();
 		}
@@ -211,8 +217,8 @@ void solve() {
 
 	copymap();
 
-	for (int i = 0; i < 3; i++){
-		for (int j = 0; j < 3; j++){
+	for (int j = 0; j < 3; j++){
+		for (int i = 0; i < 3; i++){
 
 			sel_map(i, j);
 
