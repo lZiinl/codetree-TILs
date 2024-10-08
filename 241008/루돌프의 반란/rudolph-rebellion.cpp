@@ -1,246 +1,287 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include<iostream>
-#include<vector>
-#include<queue>
-#include<algorithm>
-#include <cstring>
+#include <iostream>
+#include <vector>
+#include <algorithm>
 
 using namespace std;
 
 int N, M, P, C, D;
-int ru_x, ru_y;
+int t=1;
+int map[52][52];
+int dx[4] = { 0,1,0,-1 };
+int dy[4] = { -1,0,1,0 };
+int d_cnt;
 
-struct Santa
-{
-	int num, y, x, t, d;
+struct Santa {
+    int num, y, x;
 };
 
-vector<Santa> S;
-
-int map[110][110];
-bool isdie[31];
-int score[31];
-
-int dy[8] = { -1, 0, 1, 0, -1, 1, 1, -1 };
-int dx[8] = { 0, 1, 0, -1, -1, -1, 1, 1 };
-
-int gametime;
-int gameflag;
+vector<Santa> s;
+Santa rd;
+int score[32];
+int stun[32];
+int isalive[32];
 
 bool cmp(Santa a, Santa b) {
-
-	if (a.d != b.d) return a.d < b.d;
-	else {
-		if (a.y != b.y) return a.y > b.y;
-		else return a.x > b.x;
-	}
-
-}
-
-bool cmp2(Santa a, Santa b) {
-	return a.num < b.num;
+    return a.num < b.num;
 }
 
 void input() {
 
-	cin >> N >> M >> P >> C >> D;
-	cin >> ru_y >> ru_x;
+    cin >> N >> M >> P >> C >> D;
 
-	map[ru_y][ru_x] = -1;
-	S.push_back({ 0,0,0,0 });
-	for (int i = 1; i <= P; i++){
-		int t1, t2, t3;
-		cin >> t1 >> t2 >> t3;
-		S.push_back({t1, t2, t3 });
-		map[t2][t3] = t1;
-	}
+    cin >> rd.y >> rd.x;
+    map[rd.y][rd.x] = -1;
 
-	sort(S.begin(), S.end(), cmp2);
+    s.push_back({ 0,0,0 });
+    for (int i = 1; i <= P; i++) {
+        int t_n, t_y, t_x;
+        cin >> t_n >> t_y >> t_x;
+        s.push_back({ t_n, t_y, t_x });
+        map[t_y][t_x] = t_n;
+    }
+
+    sort(s.begin(), s.end(), cmp);
 }
 
-void inter(int y, int x, int dir) {
+void inter(int sy, int sx, int diry, int dirx, int flag) {
 
-	int n = map[y][x];
+    int num = map[sy][sx];
+    int nx = 0;
+    int ny = 0;
 
-	map[y][x] = 0;
-	S[n].x = S[n].x + dx[dir];
-	S[n].y = S[n].y + dy[dir];
+    if (map[sy][sx] > 0) {
 
-	if (S[n].x < 1 || S[n].y < 1 || S[n].x > N || S[n].y > N) {
-		isdie[n] = true;
-		return;
-	}
+        if (flag == 1) {
+            nx = sx + dirx;
+            ny = sy + diry;
+        }
 
-	if (map[S[n].y][S[n].x] != 0) {
-		inter(S[n].y, S[n].x, dir);
-	}
-
-	if (S[n].y > 0 && S[n].x > 0) {
-		map[S[n].y][S[n].x] = n;
-	}
-
+        if (flag == 0) {
+            nx = sx - dirx;
+            ny = sy - diry;
+        }
+        
+        if (ny > N || nx > N || ny <= 0 || nx <= 0) {
+            isalive[num] = 1;
+            s[map[ny][nx]].x = 0;
+            s[map[ny][nx]].y = 0;
+        }
+        else {
+            inter(ny, nx, diry, dirx, flag);
+            s[num].x = nx;
+            s[num].y = ny;
+            map[ny][nx] = map[sy][sx];
+        }
+    }
+    
 }
 
-void crash1(int n, int dir) {
+void moveRd(int ty, int tx, int ind) {
 
-	map[S[n].y][S[n].x] = 0;
-	S[n].x = S[n].x + dx[dir] * C;
-	S[n].y = S[n].y + dy[dir] * C;
-	S[n].t = gametime + 2;
+    //방향 정하기
+    int dirx = 0;
+    if (rd.x > tx) {
+        dirx = -1;
+    }
+    else if (rd.x < tx) {
+        dirx = 1;
+    }
 
-	if (S[n].x < 1 || S[n].y < 1 || S[n].x > N || S[n].y > N) {
-		isdie[n] = true;
-	}
+    int diry = 0;
+    if (rd.y > ty) {
+        diry = -1;
+    }
+    else if (rd.y < ty) {
+        diry = 1;
+    }
 
-	if (map[S[n].y][S[n].x] != 0) {
-		inter( S[n].y, S[n].x, dir);
-	}
-	
-	if (S[n].y > 0 && S[n].x > 0) {
-		map[S[n].y][S[n].x] = n;
-	}
+    //이동
+    map[rd.y][rd.x] = 0;
+    rd.x += dirx;
+    rd.y += diry;
+    map[rd.y][rd.x] = -1;
+
+    //루돌프와 산타 충돌
+    if (rd.x == tx && rd.y == ty) {
+        int nx = tx + C * dirx;
+        int ny = ty + C * diry;
+
+        stun[ind] = t + 2;
+        score[ind] += C;
+
+        //범위 벗어나면 죽음
+        if (ny > N || nx > N || ny <= 0 || nx <= 0) {
+            isalive[ind] = 1;
+            s[ind].x = 0;
+            s[ind].y = 0;
+            d_cnt++;
+        }
+        else {//범위를 벗어나지 않은 경우
+
+            if (map[ny][nx] != 0) {
+                inter(ny, nx, diry, dirx,1);
+                s[ind].x = nx;
+                s[ind].y = ny;
+                map[ny][nx] = s[ind].num;
+            }
+            else {
+                map[ny][nx] = s[ind].num;
+                s[ind].x = nx;
+                s[ind].y = ny;
+            }
+        }
+    }
 }
 
-void crash2(int n, int dir) {
+void moveSt() {
 
-	S[n].x = S[n].x + dx[dir] * D;
-	S[n].y = S[n].y + dy[dir] * D;
-	S[n].t = gametime + 2;
+    for (int i = 1; i <= P; i++) {
 
-	if (S[n].x < 1 || S[n].y < 1 || S[n].x > N || S[n].y > N) {
-		isdie[n] = true;
-	}
+        //기절해 있으면 넘어감
+        if (t < stun[i]) continue;
+        if (isalive[i] == 1) continue;
 
-	if (map[S[n].y][S[n].x] != 0) {
-		inter(S[n].y, S[n].x, dir);
-	}
+        int dist = (rd.x - s[i].x) * (rd.x - s[i].x) + (rd.y - s[i].y) * (rd.y - s[i].y);
 
-	if (S[n].y > 0 && S[n].x > 0) {
-		map[S[n].y][S[n].x] = n;
-	}
-}
+        //산타 방향
+        int dirx = 0;
+        int diry = 0;
 
-void roodolf() {
+        int ny = 0;
+        int nx = 0;
 
-	vector<Santa> tar;
+        for (int j = 0; j < 4; j++) {
 
-	for (int i = 1; i <= P; i++){
-		if (isdie[i] == true) continue;
-		int dist = (S[i].x - ru_x) * (S[i].x - ru_x) + (S[i].y - ru_y) * (S[i].y - ru_y);
-		tar.push_back({ S[i].num, S[i].y , S[i].x, 0, dist });
-	}
+            ny = s[i].y + dy[j];
+            nx = s[i].x + dx[j];
 
-	if (tar.size() == 0) {
-		gameflag = 1;
-		return;
-	}
+            //벽
+            if (ny > N || nx > N || ny <= 0 || nx <= 0) continue;
 
-	sort(tar.begin(), tar.end(), cmp);
-	int dir = 0;
+            //다른 산타
+            if (map[ny][nx] > 0) continue;
 
-	if (tar[0].x > ru_x && tar[0].y > ru_y) {
-		dir = 6;
-	}
-	else if (tar[0].x > ru_x && tar[0].y < ru_y) {
-		dir = 7;
-	}
-	else if (tar[0].x < ru_x && tar[0].y > ru_y) {
-		dir = 5;
-	}
-	else if (tar[0].x < ru_x && tar[0].y < ru_y) {
-		dir = 4;
-	}
-	else if (tar[0].x > ru_x && tar[0].y == ru_y) {
-		dir = 1;
-	}
-	else if (tar[0].x < ru_x && tar[0].y == ru_y) {
-		dir = 3;
-	}
-	else if (tar[0].x == ru_x && tar[0].y > ru_y) {
-		dir = 2;
-	}
-	else if (tar[0].x == ru_x && tar[0].y < ru_y) {
-		dir = 0;
-	}
+            //이동한 곳과 루돌프 거리
+            int ndist = (rd.x - nx) * (rd.x - nx) + (rd.y - ny) * (rd.y - ny);
 
-	map[ru_y][ru_x] = 0;
-	ru_y += dy[dir];
-	ru_x += dx[dir];
+            if (dist > ndist) {
+                dist = ndist;
+                dirx = dx[j];
+                diry = dy[j];
+            }
+        }
 
-	if (tar[0].x == ru_x && tar[0].y == ru_y) {
-		score[tar[0].num] += C;
-		crash1(tar[0].num, dir);
-	}
-	map[ru_y][ru_x] = -1;
-}
+        ny = s[i].y + diry;
+        nx = s[i].x + dirx;
 
-void moves() {
+        if (dirx != 0 || diry != 0) {
+            //원래 있던 자리 비움
+            map[s[i].y][s[i].x] = 0;
 
-	for (int i = 1; i <= P; i++) {
-		if (isdie[i] == true) continue;
-		if (S[i].t > gametime) continue;
+            if (rd.x == nx && rd.y == ny) {
+                stun[i] = t + 2;
+                score[i] += D;
 
-		int min_dist = (S[i].y - ru_y) * (S[i].y - ru_y) + (S[i].x - ru_x) * (S[i].x - ru_x);
-		int dir = 10;
+                ny -= diry * D;
+                nx -= dirx * D;
 
-		for (int j = 0; j < 4; j++){
-			int nx = S[i].x + dx[j];
-			int ny = S[i].y + dy[j];
+                //범위 벗어나면 죽음
+                if (ny > N || nx > N || ny <= 0 || nx <= 0) {
+                    isalive[i] = 1;
+                    s[i].x = 0;
+                    s[i].y = 0;
+                    d_cnt++;
+                }
+                else {//범위를 벗어나지 않은 경우
 
-			if (map[ny][nx] > 0) continue;
-
-			int dist = (ny - ru_y) * (ny - ru_y) + (nx - ru_x) * (nx - ru_x);
-
-			if (dist < min_dist) {
-				dir = j;
-				min_dist = dist;
-			}
-		}
-
-		if (dir != 10) {
-			map[S[i].y][S[i].x] = 0;
-			S[i].x += dx[dir];
-			S[i].y += dy[dir];
-		}
-
-		if (S[i].x == ru_x && S[i].y == ru_y) {
-			score[i] += D;
-			crash2(i, (dir + 2) % 4);
-		}
-
-		if (S[i].y > 0 && S[i].x > 0) {
-			map[S[i].y][S[i].x] = i;
-		}
-	}
+                    if (map[ny][nx] != 0) {
+                        inter(ny, nx, diry, dirx,0);
+                        s[i].x = nx;
+                        s[i].y = ny;
+                        map[ny][nx] = s[i].num;
+                    }
+                    else {
+                        map[ny][nx] = s[i].num;
+                        s[i].x = nx;
+                        s[i].y = ny;
+                    }
+                }
+            }
+            else {
+                map[ny][nx] = s[i].num;
+                s[i].x = nx;
+                s[i].y = ny;
+            }
+        }
+    }
 }
 
 void solve() {
-	roodolf();
-	if (gameflag == 1) return;
-	moves();
 
-	for (int i = 1; i <= P; i++){
-		if (isdie[i] == true) continue;
-		score[i]++;
-	}
+    while (t <= M) {
+
+        //타겟찾기
+        int mindist = 6000;
+        int tar_x = 0;
+        int tar_y = 0;
+        int tar_ind = 0;
+
+        for (int i = 1; i <= P; i++) {
+
+            if (isalive[i] == 1) continue;
+
+            int dist_x = (rd.x - s[i].x);
+            int dist_y = (rd.y - s[i].y);
+            int dist = (dist_x * dist_x) + (dist_y * dist_y);
+
+            if (dist < mindist) {
+                mindist = dist;
+                tar_x = s[i].x;
+                tar_y = s[i].y;
+                tar_ind = i;
+            }
+            else if (dist == mindist) {
+
+                if (tar_y < s[i].y) {
+                    tar_x = s[i].x;
+                    tar_y = s[i].y;
+                    tar_ind = i;
+                }
+                else if (tar_y == s[i].y) {
+                    if (tar_x < s[i].x) {
+                        tar_x = s[i].x;
+                        tar_y = s[i].y;
+                        tar_ind = i;
+                    }
+                }
+            }
+        }
+
+        moveRd(tar_y, tar_x, tar_ind);
+        moveSt();
+
+        //살아남은 사람 없으면 끝
+        if ( d_cnt == P)break;
+
+        //살아남은 사람 점수 증가
+        for (int i = 1; i <= P; i++) {
+            if (isalive[i] == 1)continue;
+            score[s[i].num]++;
+        }
+
+        //시간 증가
+        t++;
+    }
 }
 
 int main() {
 
-	//freopen("sample.txt.", "r", stdin);
-
-	input();
-
-	for (int i = 1; i <= M; i++){
-		gametime++;
-		//cout << gametime << "\n";
-		solve();
-		if (gameflag == 1) break;
-	}
-
-	for (int i = 1; i <= P; i++){
-		cout << score[i] << " ";
-	}
-
-	return 0;
+    //freopen("sample.txt", "r", stdin);
+    input();
+    solve();
+    for (int i = 1; i <= P; i++) {
+        cout << score[i] << " ";
+    }
+    return 0;
 }
