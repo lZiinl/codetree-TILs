@@ -22,7 +22,7 @@ void input() {
 
 void solve() {
 
-	int result = 0;
+	long long int result = 0;
 
 	for (int i = 0; i < N; i++){
 		int sum = num[i] - i;
