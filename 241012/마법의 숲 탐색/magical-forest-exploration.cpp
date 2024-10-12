@@ -2,285 +2,186 @@
 #include <iostream>
 #include <vector>
 #include <queue>
-#include <cstring>
-
+#include <algorithm>
 using namespace std;
 
-int map[72][72];
-int gol[3][3];
+#define MAX 70
 
-int R, C, K, D;
+int R, C, K;
+int forest[MAX + 3][MAX] = { 0, };
 
-//골렘 중심 좌표
-int sp_x, sp_y;
-
-int dx[4] = { 0, 1, 0, -1 };
+// 상우하좌(시계방향)
 int dy[4] = { -1, 0, 1, 0 };
-
-// 게임 플레그 1 이면 시작불가
-// 2 아래이동 불가
-// 3 왼쪽아래 이동 불가
-// 4 오른쪽아래 이동 불가 -> 전제 이동불가
-int gameflag;
-
-void input() {
-	cin >> R >> C >> K;
-}
-
-void maperase() {
-	map[sp_y][sp_x] = 0;
-	for (int i = 0; i < 4; i++){
-		int nx = sp_x + dx[i];
-		int ny = sp_y + dy[i];
-
-		map[ny][nx] = 0;
-	}
-}
-
-void mapmake() {
-	for (int i = sp_y - 1; i <= sp_y + 1; i++) {
-		for (int j = sp_x - 1; j <= sp_x + 1; j++) {
-			if (map[i][j] != 0) continue;
-			map[i][j] = gol[i - sp_y + 1][j - sp_x + 1];
-		}
-	}
-}
-
-void print() {
-	for (int i = 1; i <= R; i++){
-		for (int j = 1; j <= C; j++){
-			cout << map[i][j] << " ";
-		}
-		cout << "\n";
-	}
-	cout << "\n";
-}
-
-void makegol(int cnt) {
-	gol[1][1] = cnt;
-	for (int j = 0; j < 4; j++) {
-		gol[1 + dy[j]][1 + dx[j]] = cnt;
-	}
-	gol[1 + dy[D]][1 + dx[D]] = -1;
-}
-
-void checkd() {
-	if (sp_y + 1 >= R) {
-		gameflag = 4;
-	}
-
-	if (map[sp_y + 1][sp_x - 1] != 0 || map[sp_y + 1][sp_x + 1] != 0 || map[sp_y + 2][sp_x] != 0) {
-		gameflag = 2;
-		return;
-	}
-}
-
-void moved() {
-	sp_y++;
-}
-
-void movel() {
-	sp_y++;
-	sp_x--;
-
-	int temp = gol[0][1];
-	gol[0][1] = gol[1][2];
-	gol[1][2] = gol[2][1];
-	gol[2][1] = gol[1][0];
-	gol[1][0] = temp;
-}
-
-void mover() {
-	sp_y++;
-	sp_x++;
-
-	int temp = gol[0][1];
-	gol[0][1] = gol[1][0];
-	gol[1][0] = gol[2][1];
-	gol[2][1] = gol[1][2];
-	gol[1][2] = temp;
- }
-
-void checkl() {
-	if (sp_x - 2 < 1) {
-		gameflag = 3;
-		return;
-	}
-
-	if (sp_y + 2 > R) {
-		gameflag = 3;
-	}
-
-	if (map[sp_y - 1][sp_x - 1] != 0 || map[sp_y][sp_x - 2] != 0 ||
-		map[sp_y + 1][sp_x - 1] != 0 || map[sp_y + 1][sp_x - 2] != 0 ||
-		map[sp_y + 2][sp_x - 1] != 0) {
-		gameflag = 3;
-	}
-}
-
-void checkr() {
-	if (sp_x + 2 > C) {
-		gameflag = 4;
-		return;
-	}
-
-	if (sp_y + 2 > R) {
-		gameflag = 4;
-	}
-
-	if (map[sp_y - 1][sp_x + 1] != 0 || map[sp_y][sp_x + 2] != 0 ||
-		map[sp_y + 1][sp_x + 1] != 0 || map[sp_y + 1][sp_x + 2] != 0 ||
-		map[sp_y + 2][sp_x + 1] != 0) {
-		gameflag = 4;
-	}
-}
-
-void reset() {
-	for (int i = 1; i <= R; i++){
-		for (int j = 1; j <= C; j++){
-			map[i][j] = 0;
-		}
-	}
-}
-
+int dx[4] = { 0,1, 0, -1 };
+bool exits[MAX + 3][MAX] = { false,0 };
 int ans;
-struct Node
+
+struct Golem
 {
-	int y, x;
+    int y, x;
+    int d;
+    int num;
+};
+queue<Golem> golems;
+
+struct Point
+{
+    int y, x;
 };
 
-int vis[72][72];
-vector<Node> v;
-
-void bfs() {
-	memset(vis, 0, sizeof(vis));
-
-	queue<Node> q;
-	q.push({ sp_y, sp_x });
-	vis[sp_y][sp_x] = 1;
-	int rmax = 0;
-
-	while (!q.empty()) {
-
-		Node now = q.front();
-		q.pop();
-
-		if (now.y > rmax) {
-			rmax = now.y;
-		}
-
-		for (int i = 0; i < 4; i++){
-			int ny = now.y + dy[i];
-			int nx = now.x + dx[i];
-
-			if (vis[ny][nx] == 1) continue;
-			if (map[ny][nx] == map[now.y][now.x] ) {
-				q.push({ ny, nx });
-				vis[ny][nx] = 1;
-			}
-
-			if (map[ny][nx] == -1) {
-				int check = 0;
-
-				for (int j = 0; j < v.size(); j++){
-					if (v[j].y == now.y && v[j].x == now.x) {
-						check = 1;
-						break;
-					}
-				}
-
-				if (check == 1) {
-					q.push({ ny, nx });
-					vis[ny][nx] = 1;
-				}
-			}
-
-			if (map[now.y][now.x] == -1) {
-				if (map[ny][nx] != 0) {
-					q.push({ ny, nx });
-					vis[ny][nx] = 1;
-				}
-			}
-		}
-	}
-
-	ans += rmax;
+void input()
+{
+    cin >> R >> C >> K;
+    for (int i = 1; i <= K; i++)
+    {
+        int x, dir;
+        cin >> x >> dir;
+        Golem a = { 0, x - 1, dir, i };
+        golems.push(a);
+    }
 }
 
-void solve() {
-	for (int i = 0; i < K; i++){
-		cin >> sp_x >> D;
-		sp_y = -1;
-		gameflag = 0;
+bool in_forest(int y, int x)
+{
+    bool flag;
 
-		int cnt = i + 1;
+    if (y >= 3 && y < R + 3 && x >= 0 && x < C) return true;
+    else return false;
+}
 
-		makegol(cnt);
-		mapmake();
+// y, x 에 위치할 수 있는지 체크
+bool can_go(int y, int x)
+{
+    bool flag;
+    if (x - 1 >= 0 && x + 1 < C && y + 1 < R + 3) flag = true;
+    else flag = false;
 
-		while (gameflag != 4) {
-			gameflag = 0;
+    flag = flag && (forest[y - 1][x - 1] == 0);
+    flag = flag && (forest[y - 1][x] == 0);
+    flag = flag && (forest[y - 1][x + 1] == 0);
 
-			//print();
-			maperase();
+    flag = flag && (forest[y][x - 1] == 0);
+    flag = flag && (forest[y][x] == 0);
+    flag = flag && (forest[y][x + 1] == 0);
 
-			if (gameflag != 1) {
-				
-				checkd();
-				if (gameflag == 0) {
-					moved();
-				}
+    flag = flag && (forest[y + 1][x] == 0);
 
-				if (gameflag == 2) {
-					checkl();
-					if (gameflag == 2) {
-						movel();
-					}
-				}
+    return flag;
+}
 
-				if (gameflag == 3) {
-					checkr();
-					if (gameflag == 3) {
-						mover();
-					}
-				}
+// 숲 초기화
+void reset_forest()
+{
+    for (int i = 0; i < R + 3; i++)
+    {
+        for (int j = 0; j < C; j++)
+        {
+            forest[i][j] = 0;
+            exits[i][j] = false;
+        }
+    }
+}
 
-				if (gameflag == 4) {
-					if (sp_y < 2) {
-						gameflag = 1;
-					}
-				}
+// 탐색
+int bfs(Point st)
+{
+    int max_row = st.y;
+    bool visited[MAX + 3][MAX] = { false, 0 };
+    queue<Point> q;
+    q.push(st);
+    visited[st.y][st.x] = true;
 
-			}
+    while (!q.empty())
+    {
+        Point now = q.front();
+        q.pop();
 
-			if (gameflag == 1) {
-				reset();
-				v.clear();
-				break;
-			}
+        for (int i = 0; i < 4; i++)
+        {
+            Point next = { now.y + dy[i], now.x + dx[i] };
 
-			mapmake();
-		}
+            if (!in_forest(next.y, next.x)) continue; // 범위 체크
+            if (visited[next.y][next.x]) continue; // 이미 방문한 곳 체크
+            if (forest[next.y][next.x] == 0) continue; // 골렘이 없는 곳 체크
+            if (!exits[now.y][now.x] && forest[next.y][next.x] != forest[now.y][now.x]) continue; // 현재 골렘의 출구가 아니면서 현재 골렘과 다음 골렘이 다른 경우 체크
 
-		v.push_back({ sp_y, sp_x });
+            visited[next.y][next.x] = true;
+            q.push(next);
+            max_row = max(max_row, next.y);
+        }
+    }
 
-		if (gameflag == 4) {
-			bfs();
-		}
-	}
-	cout << ans;
+    return max_row;
+}
+
+void down(Golem now)
+{
+    // 아래로 갈 수 있는 경우
+    if (can_go(now.y + 1, now.x))
+    {
+        Golem next = { now.y + 1, now.x, now.d, now.num };
+        down(next);
+    }
+    // 서쪽 아래로 갈 수 있는 경우
+    else if (can_go(now.y + 1, now.x - 1))
+    {
+        Golem next = { now.y + 1, now.x - 1, (now.d + 3) % 4, now.num };
+        down(next);
+    }
+    // 동쪽 아래로 갈 수 있는 경우
+    else if (can_go(now.y + 1, now.x + 1))
+    {
+        Golem next = { now.y + 1, now.x + 1, (now.d + 1) % 4, now.num };
+        down(next);
+    }
+    // 이동 불가
+    else
+    {
+        // 숲을 벗어나는 경우
+        if (!in_forest(now.y - 1, now.x - 1) || !in_forest(now.y + 1, now.x + 1))
+        {
+            reset_forest();
+        }
+        // 숲 안에 정착하는 경우
+        else
+        {
+            // 숲에 골렘 기록
+            forest[now.y][now.x] = now.num;
+            for (int i = 0; i < 4; i++)
+            {
+                // 골렘 몸체 기록
+                forest[now.y + dy[i]][now.x + dx[i]] = now.num;
+
+                // 출구 기록
+                exits[now.y + dy[now.d]][now.x + dx[now.d]] = true;
+            }
+
+            // 정령이 최대로 내려갈 수 있는 행 탐색 후 더하기
+            ans += bfs({ now.y, now.x }) - 3 + 1;
+        }
+    }
+}
+
+void solution()
+{
+    // 모든 골렘들에 대해 진행
+    while (!golems.empty())
+    {
+        Golem now = golems.front();
+        golems.pop();
+
+        // 내려가기
+        down(now);
+    }
+
+    cout << ans << endl;
 }
 
 int main() {
+    //freopen("sample.txt", "r", stdin);
+    ios::sync_with_stdio(0);
+    cin.tie(0);
 
-	ios::sync_with_stdio(false);
-	cin.tie(0);
-	cout.tie(0);
-
-	//freopen("sample.txt", "r", stdin);
-
-	input();
-	solve();
-
-	return 0;
+    input();
+    solution();
 }
