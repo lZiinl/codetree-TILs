@@ -210,7 +210,7 @@ void bfs() {
 void solve() {
 	for (int i = 0; i < K; i++){
 		cin >> sp_x >> D;
-		sp_y = 0;
+		sp_y = -1;
 		gameflag = 0;
 
 		int cnt = i + 1;
